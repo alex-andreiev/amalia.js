@@ -34,13 +34,12 @@
     "grunt-webfont": "~1.7.2",
     "gulp-sass": "~4.1.0",
     "load-grunt-tasks": "~5.1.0",
+    "node-sass": "^5.0.0",
     "time-grunt": "~2.0.0"
   },
   "bugs": {
     "url": "https://github.com/ina-foss/amalia.js/issues"
   },
   "main": "Gruntfile.js",
-  "dependencies": {
-    "node-sass": "^5.0.0"
-  }
+  "dependencies": {}
 }

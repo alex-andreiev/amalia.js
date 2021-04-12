@@ -2,6 +2,7 @@
 module.exports = function (grunt) {
     require('load-grunt-tasks')(grunt);
     require('time-grunt')(grunt);
+    const sass = require('node-sass');
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jshint: {
@@ -163,6 +164,7 @@ module.exports = function (grunt) {
         },
         sass: {
             options: {
+                implementation: sass,
                 sourceMap: false
             },
             dist: {
@@ -247,21 +249,11 @@ module.exports = function (grunt) {
     });
 
     //dev
-    grunt.registerTask('dev', [
-        'clean:build',
-        'webfont:icons',
-        'copy:build',
-        'uglify:build',
-        'sass:dist',
-        'browserSync',
-        'watch'
-    ]);
 
     //Default
     grunt.registerTask('default', [
         'clean:build',
         'jshint',
-        'qunit:build',
         'uglify:build',
         'sass:dist',
         'copy:build'
