@@ -1,24 +1,24 @@
 /**
  * Copyright (c) 2015 Institut National de l'Audiovisuel, INA
- * 
+ *
  * This file is part of amalia.js
- * 
+ *
  * amalia.js is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or 
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
- * Redistributions of source code, javascript and css minified versions 
+ *
+ * Redistributions of source code, javascript and css minified versions
  * must retain the above copyright notice, this list of conditions and
  * the following disclaimer.
- * 
- * Neither the name of the copyright holder nor the names of its 
+ *
+ * Neither the name of the copyright holder nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with amalia.js. If not, see <http://www.gnu.org/licenses/>
- * 
+ *
  * amalia.js is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
@@ -678,11 +678,27 @@ $modulesSizeList: 110px, 80px, 60px, 25px;
       }
     }
 
-    $smallSizeName: extract($modulesSizeListNames, 4);
+    .component.lg .sub,
+    .component.lg .bottom-toolbar-container,
+    .component.lg .focus-container {
+      display: none;
+    }
 
-    .component.#{$smallSizeName} .sub,
-    .component.#{$smallSizeName} .bottom-toolbar-container,
-    .component.#{$smallSizeName} .focus-container {
+    .component.md .sub,
+    .component.md .bottom-toolbar-container,
+    .component.md .focus-container {
+      display: none;
+    }
+
+    .component.sm .sub,
+    .component.sm .bottom-toolbar-container,
+    .component.sm .focus-container {
+      display: none;
+    }
+
+    .component.xs .sub,
+    .component.xs .bottom-toolbar-container,
+    .component.xs .focus-container {
       display: none;
     }
 
