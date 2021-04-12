@@ -1,9 +1,9 @@
 {
-  "name": "@nice-coding/amalia",
+  "name": "amaliajs",
   "description": "Amalia.js ==========",
   "homepage": "http://ina-foss.github.io/amalia.js",
   "author": "INA",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "public_site": "site",
   "engines": {
     "node": ">= 0.11"
