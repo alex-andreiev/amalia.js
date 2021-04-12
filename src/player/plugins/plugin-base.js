@@ -263,10 +263,11 @@ $.Class("fr.ina.amalia.player.plugins.PluginBase", {
             if (typeof this.settings.shortcuts === "object" && this.settings.shortcuts.enabled === true) {
                 // the fetching shortcuts i is element index. e is element as text.
                 for (var i = 0; i < this.settings.shortcuts.listOfShortcuts.length; i++) {
+                    var conf = this.settings.shortcuts.listOfShortcuts[i];
+                    var f = conf.c;
+
                     try {
-                        var conf = this.settings.shortcuts.listOfShortcuts[i];
                         if (conf !== null && conf.hasOwnProperty('s') && conf.hasOwnProperty('c')) {
-                            var f = conf.c;
                             /* jslint evil: true */
                             var callback = eval('this.' + f);
                             if (typeof callback === "function") {

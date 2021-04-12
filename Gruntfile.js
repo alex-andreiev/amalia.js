@@ -38,15 +38,6 @@ module.exports = function (grunt) {
                 src: [
                     'src/log/**/*.js'
                 ]
-            },
-            // Configuration with ok,notEqual,deepEqual,notDeepEqual...
-            tests: {
-                options: {
-                    jshintrc: 'tests/.jshintrc'
-                },
-                src: [
-                    'tests/**/*.js'
-                ]
             }
         },
         uglify: {
@@ -224,11 +215,6 @@ module.exports = function (grunt) {
                     }
                 ]
             }
-        },
-        qunit: {
-            build: [
-                'tests/**/*.html'
-            ]
         },
         watch: {
             uglify: {

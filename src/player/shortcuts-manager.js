@@ -55,8 +55,9 @@ $.Class("fr.ina.amalia.player.ShortcutsManager", {}, {
         if (this.settings.enabled === true) {
             // the fetching shortcuts i is element index. e is element as text.
             for (var i = 0; i < this.listOfShortcuts.length; i++) {
+                var conf = this.listOfShortcuts[i];
+
                 try {
-                    var conf = this.listOfShortcuts[i];
                     if (conf !== null && conf.hasOwnProperty('s') && conf.hasOwnProperty('c')) {
                         var f = conf.c;
                         /* jslint evil: true */
