@@ -1,4 +1,4 @@
-/*!Amalia.js ========== V1.3.5, © INA 2021 */
+/*!Amalia.js ========== V1.3.7, © INA 2021 */
 /**
  * Copyright (c) 2015 Institut National de l'Audiovisuel, INA
  * This file is part of amalia.js

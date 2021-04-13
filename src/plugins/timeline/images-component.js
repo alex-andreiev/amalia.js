@@ -57,8 +57,10 @@ fr.ina.amalia.player.plugins.timeline.BaseComponent.extend("fr.ina.amalia.player
                 }
             },
             content: function () {
+
                 var element = $(this);
                 var title = element.attr('title');
+                console.log('content', element)
                 if (element.is("[data-src]")) {
                     var src = element.attr('data-src');
                     return "<img class='timeline-images-component tooltip-image' alt='" + title + "' src='" + src + "' />";

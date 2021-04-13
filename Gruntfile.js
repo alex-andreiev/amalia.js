@@ -77,6 +77,7 @@ module.exports = function (grunt) {
                         'src/player/loader/base-loader.js',
                         'src/player/loader/http-loader.js',
                         'src/player/loader/ws-loader.js',
+                        'src/player/loader/json-loader.js',
                         'src/player/parsers/base-parser-metadata.js',
                         'src/player/metadata/metadata-manager.js',
                         'src/player/metadata/localisation-manager.js',

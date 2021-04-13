@@ -223,7 +223,6 @@ $.Class("fr.ina.amalia.player.MetadataManager", {}, {
      * @event fr.ina.amalia.player.PlayerEventType.DATA_CHANGE
      */
     addAllMetadata: function (parsedData) {
-
         if (typeof parsedData === "object" && parsedData !== null) {
             if (typeof parsedData.length !== "undefined") {
                 for (var d in parsedData) {

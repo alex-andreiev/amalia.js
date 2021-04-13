@@ -5,100 +5,120 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" href="images/favicon.ico">
-        <link href="css/default.css" rel="stylesheet">
+        <!-- <link href="css/default.css" srel="stylesheet"> -->
+
         <script src="../bower_components/jquery/dist/jquery.js"></script>
         <script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
         <script src="../bower_components/raphael/raphael.js"></script>
-        <!-- style-player -->
-        <link href="../build/css/@nice-coding/amalia.min.css" rel="stylesheet">
-        <!-- /style-player -->
-        <!-- script-player -->
-        <script src="../build/js/@nice-coding/amalia.min.js"></script>
-        <script src="../build/js/@nice-coding/amalia-plugin-timeline.min.js"></script>
-        <!-- /script-player -->
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>Plugin timeline</h1>
-            </div>
-            <div class="content">
-                <div class="demo">
-                    <div style="height: 350px;">
-                        <div id="defaultPlayer"></div>
-                    </div>
-                    <div id="timeline"></div>
-                    <script>
-                        $( function () {
-                            $( "#defaultPlayer" ).mediaPlayer( {
-                                autoplay : false,
-                                src : "../samples-data/examples/vid/amalia01.mp4",
-                                controlBar :
+
+        <!-- <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script> -->
+        <!-- <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script> -->
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script> -->
+
+        <link href="../build/css/amaliajs.min.css" rel="stylesheet">
+        <script src="../build/js/amaliajs.min.js"></script>
+        <script src="../build/js/amaliajs-plugin-timeline.min.js"></script>
+        <script>
+            $( function () {
+                const keyframes = {
+                    "localisation": [
+                        {
+                            "sublocalisations": {
+                                "localisation": [
                                     {
-                                        sticky : true
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:01.0000",
+                                        "tclevel": 1
                                     },
-                                thumbRootDirectory:'../',
-                                plugins : {
-                                    dataServices : [
-                                        '../samples-data/examples/json/amalia01-events.json',
-                                        '../samples-data/examples/json/amalia01-kf.json',
-                                        '../samples-data/examples/json/amalia01-ball.json'
-                                    ],
-                                    list : [
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:03.0000",
+                                        "tclevel": 1
+                                    },
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:05.0000",
+                                        "tclevel": 1
+                                    },
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:07.0000",
+                                        "tclevel": 1
+                                    },
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:09.0000",
+                                        "tclevel": 1
+                                    },
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:11.0000",
+                                        "tclevel": 1
+                                    },
+                                    {
+                                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                                        "tc": "00:00:13.0000",
+                                        "tclevel": 1
+                                    }
+                                ]
+                            },
+                            "type": "keyframes",
+                            "tcin": "00:00:00.0000",
+                            "tcout": "00:00:15.0000",
+                            "tclevel": 0
+                        }
+                    ],
+                    "id": "kf-amalia01",
+                    "type": "keyframes",
+                    "algorithm": "demo-video-generator",
+                    "processor": "Ina Research Department - N. HERVE",
+                    "processed": 1421141589291,
+                    "version": 1
+                }
+
+                $( "#defaultPlayer" ).mediaPlayer( {
+                    autoplay : false,
+                    src : "../samples-data/examples/vid/amalia01.mp4",
+                    controlBar :
+                        {
+                            sticky : false
+                        },
+                    // thumbRootDirectory:'../',
+                    plugins : {
+                        dataServices : [
+                            // '../samples-data/examples/json/amalia01-events.json',
+                            // '../samples-data/examples/json/amalia01-kf.json',
+                            // '../samples-data/examples/json/amalia01-ball.json'
+                            // {url: "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/samples-data/examples/json/amalia01-kf.json" },
+                            // "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/samples-data/examples/json/amalia01-kf.json"
+                            // JSON.stringify(keyframes)
+                            {data: keyframes}
+                        ],
+                        list : [
+                            {
+                                'className' : 'fr.ina.amalia.player.plugins.TimelinePlugin',
+                                'container' : '#timeline',
+                                'parameters' : {
+                                    listOfLines : [
                                         {
-                                            'className' : 'fr.ina.amalia.player.plugins.TimelinePlugin',
-                                            'container' : '#timeline',
-                                            'parameters' : {
-                                                listOfLines : [
-                                                    {
-                                                        title : 'Events',
-                                                        type : 'cuepoint',
-                                                        metadataId : 'events-amalia01',
-                                                        color : '#3CF',
-                                                        pointNav : true
-                                                    },
-                                                    {
-                                                        title : 'Ball moving up',
-                                                        type : 'segment',
-                                                        metadataId : 'ball-amalia01',
-                                                        color : '#F00'
-                                                    },
-                                                    {
-                                                        title : 'Keyframes every 2s',
-                                                        type : 'image',
-                                                        metadataId : 'kf-amalia01',
-                                                        pointNav : true
-                                                    }
-                                                ]
-                                            }
+                                            title : 'Keyframes every 2s',
+                                            type : 'image',
+                                            metadataId : 'kf-amalia01',
+                                            pointNav : true
                                         }
                                     ]
                                 }
-                            } );
-                        } );
-                    </script>
-                    <div>
-                        <pre class="config">
-                        {
-                            'className' : 'fr.ina.amalia.player.plugins.WatermarkPlugin',
-                            'parameters' :
-                                {
-                                    backgroundImageUrl : 'images/logo_ina.jpg',
-                                    ratio : 50,
-                                    placement : 'c',
-                                    imageWidth : 300,
-                                    imageHeight : 298
-                                }
-                        }
-                        </pre>
-                    </div>
-                </div>
-            </div>
-            <div class="footer">
-                <p>
-                    <a href="http://www.institut-national-audiovisuel.fr/en/home"><img class="logo-ina" src="images/logo_ina.jpg" style=" margin-right:10px; width: 32x; height: 32px" />Institut National de l'Audiovisuel - INA</a>© 2015
-                </p>
-            </div>
+                            }
+                        ]
+                    }
+                } );
+            } );
+        </script>
+    </head>
+    <body>
+        <div style="height: 350px;">
+            <div id="defaultPlayer"></div>
         </div>
+        <div id="timeline"></div>
     </body>
 </html>
