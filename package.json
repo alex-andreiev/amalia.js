@@ -3,7 +3,7 @@
   "description": "Amalia.js ==========",
   "homepage": "http://ina-foss.github.io/amalia.js",
   "author": "INA",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "public_site": "site",
   "engines": {
     "node": ">= 0.11"
@@ -37,9 +37,7 @@
     "node-sass": "^5.0.0",
     "time-grunt": "~2.0.0"
   },
-  "bugs": {
-    "url": "https://github.com/ina-foss/amalia.js/issues"
-  },
+  "bugs": {},
   "main": "Gruntfile.js",
   "dependencies": {}
 }
