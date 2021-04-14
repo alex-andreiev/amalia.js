@@ -794,6 +794,7 @@ fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.extend("fr.ina.amalia.player.
          * Update all block
          */
         updateAllBlocks: function () {
+            console.log('updateAllBlocks')
             var listOfObject = null;
             for (var i = 0;
                  i < this.listOfComponents.length;
@@ -819,6 +820,7 @@ fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.extend("fr.ina.amalia.player.
          * @param {String} action
          */
         updateBlock: function (id, action) {
+            console.log('updateBlock id action', id, action)
             for (var i = 0;
                  i < this.listOfComponents.length;
                  i++) {

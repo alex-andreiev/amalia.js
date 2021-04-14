@@ -222,7 +222,6 @@ $.Class("fr.ina.amalia.player.plugins.PluginManager", {}, {
     loadData: function (hosts) {
         // Send BEGIN_DATA_CHANGE event
         this.mediaContainer.trigger(fr.ina.amalia.player.PlayerEventType.BEGIN_DATA_CHANGE);
-        console.log('loadData hosts', hosts)
         if ($.isArray(hosts)) {
             var i = 0;
             var loader = null;
@@ -243,14 +242,14 @@ $.Class("fr.ina.amalia.player.plugins.PluginManager", {}, {
                     sublocalisations: (host.hasOwnProperty('sublocalisations')) ? host.sublocalisations : false,
                     data: host.data || undefined
                 };
-                console.log('loadData host', host)
+                console.log('loadData settings', settings)
                 if (settings.data) {
                     loader = new fr.ina.amalia.player.JsonLoader(settings, this.mediaPlayer, this.dataLoadedHandler, {
                         self: this
                     });
                 }
 
-                if (typeof host[i] === 'string') {
+                else if (typeof host[i] === 'string') {
                     loader = new fr.ina.amalia.player.HttpLoader(settings, this.mediaPlayer, this.dataLoadedHandler, {
                         self: this
                     });

@@ -42,7 +42,7 @@ fr.ina.amalia.player.BaseLoader.extend("fr.ina.amalia.player.JsonLoader", {}, {
     load: function (settings) {
         var self = this;
 
-        self.onSuccess([settings.data], 'success');
+        self.onSuccess(settings.data, 'success');
     },
 
     onSuccess: function (data, textStatus) {

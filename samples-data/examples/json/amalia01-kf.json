@@ -10,39 +10,29 @@
                     },
                     {
                         "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                        "tc": "00:00:02.0000",
+                        "tclevel": 1
+                    },
+                    {
+                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
                         "tc": "00:00:03.0000",
+                        "tclevel": 1
+                    },
+                    {
+                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
+                        "tc": "00:00:04.0000",
                         "tclevel": 1
                     },
                     {
                         "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
                         "tc": "00:00:05.0000",
                         "tclevel": 1
-                    },
-                    {
-                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
-                        "tc": "00:00:07.0000",
-                        "tclevel": 1
-                    },
-                    {
-                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
-                        "tc": "00:00:09.0000",
-                        "tclevel": 1
-                    },
-                    {
-                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
-                        "tc": "00:00:11.0000",
-                        "tclevel": 1
-                    },
-                    {
-                        "thumb": "https://s3-eu-west-1.amazonaws.com/vu-storage.ruptly.online/test/keyframe_6_h264_1920x1080_5Mbps_0.jpg",
-                        "tc": "00:00:13.0000",
-                        "tclevel": 1
                     }
                 ]
             },
             "type": "keyframes",
             "tcin": "00:00:00.0000",
-            "tcout": "00:00:15.0000",
+            "tcout": "00:00:05.0000",
             "tclevel": 0
         }
     ],

@@ -183,6 +183,7 @@ $.Class("fr.ina.amalia.player.MetadataManager", {}, {
      * @param action trigger action
      */
     updateBlockMetadata: function (id, data, action) {
+        console.log('updateBlockMetadata id, data, action', id, data, action)
         try {
             if (typeof data === "object") {
                 this.listOfBlocks[id] = $.extend(this.listOfBlocks[id], JSON.parse(JSON.stringify(data)));
@@ -223,6 +224,7 @@ $.Class("fr.ina.amalia.player.MetadataManager", {}, {
      * @event fr.ina.amalia.player.PlayerEventType.DATA_CHANGE
      */
     addAllMetadata: function (parsedData) {
+        console.log('addAllMetadata', 0)
         if (typeof parsedData === "object" && parsedData !== null) {
             if (typeof parsedData.length !== "undefined") {
                 for (var d in parsedData) {
@@ -239,6 +241,7 @@ $.Class("fr.ina.amalia.player.MetadataManager", {}, {
                         }
                         if (parsedData[d].hasOwnProperty('type') === true) {
                             var _data = parsedData[d];
+                            console.log('addAllMetadata updateBlockMetadata()')
                             this.updateBlockMetadata(_data.id, {
                                 type: _data.type,
                                 id: _data.id,

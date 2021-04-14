@@ -718,6 +718,7 @@ $.Class("fr.ina.amalia.player.plugins.timeline.BaseComponent", {
          * @param {Array} listOfdata description
          */
         addItems: function (listOfdata) {
+            console.log('addItems listOfdata', listOfdata)
             if (this.logger !== null) {
                 this.logger.trace(this.Class.fullName, " addItems/ZoomLevel:" + this.zoomLevel);
                 this.logger.warn(listOfdata);
