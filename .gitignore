@@ -1,3 +1,9 @@
 .svn
 .bowerrc
 build
+build-doc
+.idea
+bower_components
+node_modules
+npm-debug.log
+package-lock.json
