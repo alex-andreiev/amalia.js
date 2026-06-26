@@ -1,7 +1,7 @@
 {
-    "name" : "amalia.js",
+    "name" : "amalia.js-player",
     "version" : "1.3.3",
-    "main" : "dist/js/amalia.js.min.js",
+    "main" : "build/js/amalia.js-player.min.js",
     "license" : "MIT",
     "ignore" : [
         "**/.*",
@@ -13,12 +13,12 @@
         "package.json"
     ],
     "dependencies" : {
-        "jquery" : "~2.1.3",
-        "raphael" : "~2.1.3",
-        "jquery-ui" : "~1.11.2"
+        "jquery" : "~3.7.1",
+        "raphael" : "~2.3.0",
+        "jquery-ui" : "~1.13.3"
     },
     "devDependencies":{
-        "qunit":"1.14.0"
+        "qunit":"~2.26.0"
     },
     "keywords" : [
         "javascript",

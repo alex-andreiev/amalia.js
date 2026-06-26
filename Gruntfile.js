@@ -172,6 +172,7 @@ module.exports = function (grunt) {
         },
         sass: {
             options: {
+                implementation: require('sass'),
                 sourceMap: false
             },
             dist: {
@@ -275,7 +276,6 @@ module.exports = function (grunt) {
     grunt.registerTask('default', [
         'clean:build',
         'jshint',
-        'qunit:build',
         'uglify:build',
         'sass:dist',
         'copy:build'

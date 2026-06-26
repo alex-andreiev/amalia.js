@@ -675,7 +675,7 @@ $modulesSizeList: 110px, 80px, 60px, 25px;
       }
     }
 
-    $smallSizeName: extract($modulesSizeListNames, 4);
+    $smallSizeName: nth($modulesSizeListNames, 4);
 
     .component.#{$smallSizeName} .sub,
     .component.#{$smallSizeName} .bottom-toolbar-container,

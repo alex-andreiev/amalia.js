@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>amalia.js-player — interactive playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Runtime dependencies (jQuery 3.7.x, jQuery UI 1.13.x, Raphaël 2.3.x) from CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+
+    <!-- amalia.js-player (built locally — run `npm run build` first) -->
+    <link rel="stylesheet" href="build/css/amalia.js-player.min.css">
+    <script src="build/js/amalia.js-player.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #1b1b1f;
+            --panel: #26262c;
+            --border: #3a3a44;
+            --text: #e7e7ea;
+            --muted: #9a9aa6;
+            --accent: #0cf;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        header h1 { margin: 0; font-size: 20px; }
+        header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+        header code { color: var(--accent); }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            padding: 20px 24px;
+            align-items: start;
+        }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+        .player-stage {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        /* The player fills its host; the host needs an explicit height. */
+        #player-host { height: 420px; position: relative; }
+
+        .config-out {
+            margin-top: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .config-out summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
+        .config-out pre {
+            margin: 0;
+            padding: 0 14px 14px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #cfe9ff;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .panel h2 { margin: 0 0 4px; font-size: 14px; }
+        .panel .hint { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+
+        fieldset { border: none; border-top: 1px solid var(--border); margin: 0; padding: 14px 0 0; }
+        fieldset legend { padding: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+        .field { margin: 12px 0; }
+        .field label { display: block; font-size: 13px; margin-bottom: 5px; }
+        .field input[type="text"],
+        .field input[type="number"],
+        .field select {
+            width: 100%;
+            padding: 7px 9px;
+            background: #1b1b20;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            font-size: 13px;
+        }
+        .field.check { display: flex; align-items: center; gap: 8px; }
+        .field.check label { margin: 0; }
+        .field.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        .actions { display: flex; gap: 8px; margin-top: 16px; }
+        button {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #303039;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        button.primary { background: var(--accent); color: #003; border-color: var(--accent); font-weight: 600; }
+        button:hover { filter: brightness(1.1); }
+
+        .live { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 12px; color: var(--muted); }
+        .live input { accent-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>amalia.js-player — interactive playground</h1>
+        <p>Set parameters on the right and they apply live to the player. Edit <code>$("#player").mediaPlayer(config)</code> visually. Video samples are public Blender open movies served from Google's sample bucket.</p>
+    </header>
+
+    <div class="layout">
+        <!-- ============ PLAYER ============ -->
+        <div>
+            <div class="player-stage">
+                <div id="player-host"></div>
+            </div>
+            <details class="config-out" open>
+                <summary>Generated config</summary>
+                <pre id="config-output"></pre>
+            </details>
+        </div>
+
+        <!-- ============ CONFIG FORM ============ -->
+        <form class="panel" id="config-form" autocomplete="off">
+            <h2>Player parameters</h2>
+            <p class="hint">Changes apply on edit when live mode is on, or click “Apply”.</p>
+
+            <fieldset>
+                <legend>Media</legend>
+                <div class="field">
+                    <label for="preset">Sample video</label>
+                    <select id="preset">
+                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Big Buck Bunny</option>
+                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">Elephants Dream</option>
+                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">Sintel</option>
+                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">For Bigger Blazes</option>
+                        <option value="">— custom URL —</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="src">Source URL (src)</label>
+                    <input type="text" id="src" placeholder="https://…/video.mp4">
+                </div>
+                <div class="field">
+                    <label for="poster">Poster URL (poster)</label>
+                    <input type="text" id="poster" placeholder="optional image URL">
+                </div>
+                <div class="field">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" placeholder="optional">
+                </div>
+                <div class="field">
+                    <label for="preload">Preload</label>
+                    <select id="preload">
+                        <option value="auto" selected>auto</option>
+                        <option value="metadata">metadata</option>
+                        <option value="none">none</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Playback</legend>
+                <div class="field check">
+                    <input type="checkbox" id="autoplay">
+                    <label for="autoplay">autoplay</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="togglePlayPause">
+                    <label for="togglePlayPause">togglePlayPause (click video to play/pause)</label>
+                </div>
+                <div class="field">
+                    <label for="framerate">framerate (fps)</label>
+                    <input type="number" id="framerate" value="25" min="1" step="1">
+                </div>
+                <div class="field">
+                    <label for="tcOffset">tcOffset (timecode offset, frames)</label>
+                    <input type="number" id="tcOffset" value="0" step="1">
+                </div>
+                <div class="field">
+                    <label for="duration">duration override (seconds, blank = auto)</label>
+                    <input type="number" id="duration" placeholder="auto" min="0" step="1">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Control bar</legend>
+                <div class="field check">
+                    <input type="checkbox" id="cb-sticky">
+                    <label for="cb-sticky">sticky (always visible)</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="cb-autohide" checked>
+                    <label for="cb-autohide">autohide</label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Misc</legend>
+                <div class="field check">
+                    <input type="checkbox" id="debug">
+                    <label for="debug">debug (verbose console logging)</label>
+                </div>
+            </fieldset>
+
+            <div class="actions">
+                <button type="button" class="primary" id="apply">Apply</button>
+                <button type="button" id="reset">Reset</button>
+            </div>
+            <label class="live">
+                <input type="checkbox" id="live" checked>
+                Live mode — apply changes automatically
+            </label>
+        </form>
+    </div>
+
+    <script>
+        (function ($) {
+            var $form = $('#config-form');
+
+            // Read every form control into an amalia.js-player settings object.
+            function buildConfig() {
+                var durationVal = $('#duration').val();
+                return {
+                    src: $('#src').val().trim(),
+                    poster: $('#poster').val().trim(),
+                    title: $('#title').val().trim(),
+                    preload: $('#preload').val(),
+                    autoplay: $('#autoplay').is(':checked'),
+                    togglePlayPause: $('#togglePlayPause').is(':checked'),
+                    framerate: parseInt($('#framerate').val(), 10) || 25,
+                    tcOffset: parseInt($('#tcOffset').val(), 10) || 0,
+                    duration: durationVal === '' ? null : parseFloat(durationVal),
+                    debug: $('#debug').is(':checked'),
+                    controlBar: {
+                        sticky: $('#cb-sticky').is(':checked'),
+                        autohide: $('#cb-autohide').is(':checked')
+                    }
+                };
+            }
+
+            // Tear down the previous player instance, then mount a fresh one.
+            function renderPlayer() {
+                var config = buildConfig();
+
+                if (!config.src) {
+                    $('#player-host').html('<div style="color:#9a9aa6;padding:20px;font-size:13px">' +
+                        'Provide a source URL (or pick a sample) to load the player.</div>');
+                    $('#config-output').text(stringify(config));
+                    return;
+                }
+
+                var $old = $('#player');
+                if ($old.length) {
+                    var factory = $old.data('fr.ina.amalia.player');
+                    try { if (factory && factory.getPlayer()) { factory.getPlayer().destroy(); } } catch (e) { /* ignore */ }
+                }
+                // A brand-new element avoids the plugin's "already initialised" guard.
+                $('#player-host').empty().append($('<div id="player"></div>'));
+                $('#player').mediaPlayer(config);
+
+                $('#config-output').text(stringify(config));
+            }
+
+            // Pretty-print as a mediaPlayer() call, dropping empty optionals for clarity.
+            function stringify(config) {
+                var shown = {};
+                Object.keys(config).forEach(function (k) {
+                    var v = config[k];
+                    if (v === '' || v === null) return;
+                    shown[k] = v;
+                });
+                return '$("#player").mediaPlayer(' + JSON.stringify(shown, null, 2) + ');';
+            }
+
+            function maybeLive() { if ($('#live').is(':checked')) { renderPlayer(); } }
+
+            // Keep the custom URL field in sync with the preset selector.
+            $('#preset').on('change', function () {
+                var val = $(this).val();
+                if (val !== '') { $('#src').val(val); }
+                maybeLive();
+            });
+
+            // Text inputs apply on blur/change; checkboxes & selects apply immediately.
+            $form.on('change', 'input, select', maybeLive);
+
+            $('#apply').on('click', renderPlayer);
+
+            $('#reset').on('click', function () {
+                $form[0].reset();
+                // .reset() restores HTML defaults; sync src from the default preset.
+                $('#src').val($('#preset').val());
+                renderPlayer();
+            });
+
+            // Initial mount.
+            $(function () {
+                $('#src').val($('#preset').val());
+                renderPlayer();
+            });
+        })(jQuery);
+    </script>
+</body>
+</html>
