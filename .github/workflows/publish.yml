@@ -1,0 +1,51 @@
+name: Publish
+
+# Publishes to both npmjs.org and GitHub Packages.
+# Triggers automatically when a GitHub Release is published, or manually.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1) npmjs.org  ->  amalia.js-player  (unscoped name, as in package.json)
+  # ---------------------------------------------------------------------------
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # 2) GitHub Packages  ->  @alex-andreiev/amalia.js-player  (scoped name)
+  #    GitHub Packages requires the package to be scoped to the repo owner,
+  #    so the name is rewritten to the scoped form just before publishing.
+  # ---------------------------------------------------------------------------
+  publish-gpr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@alex-andreiev'
+      - run: npm ci
+      - name: Scope package name for GitHub Packages
+        run: npm pkg set name=@alex-andreiev/amalia.js-player
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
