@@ -32,12 +32,33 @@
             color: var(--text);
         }
         header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px 20px;
             padding: 18px 24px;
             border-bottom: 1px solid var(--border);
         }
         header h1 { margin: 0; font-size: 20px; }
-        header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+        header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; max-width: 720px; line-height: 1.5; }
         header code { color: var(--accent); }
+        header p a { color: var(--accent); }
+        .header-links { display: flex; gap: 10px; flex-shrink: 0; }
+        .header-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--text);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .header-links a:hover { border-color: var(--accent); color: var(--accent); }
 
         .layout {
             display: grid;
@@ -126,8 +147,14 @@
 </head>
 <body>
     <header>
-        <h1>amalia.js-player — interactive playground</h1>
-        <p>Set parameters on the right and they apply live to the player. Edit <code>$("#player").mediaPlayer(config)</code> visually. Video samples are public Blender open movies served from Google's sample bucket.</p>
+        <div class="header-main">
+            <h1>amalia.js-player</h1>
+            <p>Metadata-enriched HTML5 video player — a maintained fork of <a href="https://github.com/ina-foss/amalia.js" target="_blank" rel="noopener">INA's amalia.js</a>. This interactive playground configures the player live: change the parameters on the right and they apply instantly, with the generated <code>$("#player").mediaPlayer(config)</code> shown below. It also demonstrates the extra control-bar widgets — subtitles, download, and playlist.</p>
+        </div>
+        <nav class="header-links">
+            <a href="https://github.com/alex-andreiev/amalia.js" target="_blank" rel="noopener">GitHub ↗</a>
+            <a href="https://www.npmjs.com/package/amalia.js-player" target="_blank" rel="noopener">npm ↗</a>
+        </nav>
     </header>
 
     <div class="layout">
