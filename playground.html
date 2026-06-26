@@ -13,6 +13,7 @@
     <!-- amalia.js-player (built locally — run `npm run build` first) -->
     <link rel="stylesheet" href="build/css/amalia.js-player.min.css">
     <script src="build/js/amalia.js-player.min.js"></script>
+    <script src="build/js/amalia.js-player-plugin-captions.min.js"></script>
 
     <style>
         :root {
@@ -89,7 +90,8 @@
         .field label { display: block; font-size: 13px; margin-bottom: 5px; }
         .field input[type="text"],
         .field input[type="number"],
-        .field select {
+        .field select,
+        .field textarea {
             width: 100%;
             padding: 7px 9px;
             background: #1b1b20;
@@ -98,6 +100,8 @@
             color: var(--text);
             font-size: 13px;
         }
+        .field textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; line-height: 1.5; }
+        .field label code { color: var(--accent); }
         .field.check { display: flex; align-items: center; gap: 8px; }
         .field.check label { margin: 0; }
         .field.check input { width: 16px; height: 16px; accent-color: var(--accent); }
@@ -148,10 +152,9 @@
                 <div class="field">
                     <label for="preset">Sample video</label>
                     <select id="preset">
-                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Big Buck Bunny</option>
-                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">Elephants Dream</option>
-                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">Sintel</option>
-                        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">For Bigger Blazes</option>
+                        <option value="https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4">Big Buck Bunny — 720p (~59 MB)</option>
+                        <option value="https://vjs.zencdn.net/v/oceans.mp4">Oceans — HD (~21 MB)</option>
+                        <option value="https://download.samplelib.com/mp4/sample-10s.mp4">Sample clip (~5 MB)</option>
                         <option value="">— custom URL —</option>
                     </select>
                 </div>
@@ -174,6 +177,20 @@
                         <option value="metadata">metadata</option>
                         <option value="none">none</option>
                     </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Playlist</legend>
+                <div class="field check">
+                    <input type="checkbox" id="playlist-enabled">
+                    <label for="playlist-enabled">Enable playlist (prev/next buttons + auto-advance)</label>
+                </div>
+                <div class="field">
+                    <label for="playlist-urls">Video URLs — one per line (overrides the source above)</label>
+                    <textarea id="playlist-urls" rows="4">https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4
+https://vjs.zencdn.net/v/oceans.mp4
+https://download.samplelib.com/mp4/sample-10s.mp4</textarea>
                 </div>
             </fieldset>
 
@@ -211,6 +228,34 @@
                     <input type="checkbox" id="cb-autohide" checked>
                     <label for="cb-autohide">autohide</label>
                 </div>
+                <div class="field check">
+                    <input type="checkbox" id="download-button">
+                    <label for="download-button">Download button</label>
+                </div>
+                <p class="hint" style="margin:0">Download saves the file for same-origin / CORS-enabled sources; cross-origin videos without CORS open in a tab instead.</p>
+            </fieldset>
+
+            <fieldset>
+                <legend>Subtitles</legend>
+                <div class="field check">
+                    <input type="checkbox" id="subs-enabled" checked>
+                    <label for="subs-enabled">Show subtitles (captions plugin)</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="subs-button" checked>
+                    <label for="subs-button">Subtitles toggle button on control bar</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="subs-default-on">
+                    <label for="subs-default-on">Subtitles visible by default</label>
+                </div>
+                <div class="field">
+                    <label for="subs-text">Cues — one per line: <code>start - end  text</code> (seconds or HH:MM:SS)</label>
+                    <textarea id="subs-text" rows="6">0 - 4   Welcome to the amalia.js-player playground
+4 - 8   These subtitles come from this field →
+8 - 12  Edit a line as:  start - end  text
+12 - 16 Untick the box above to turn them off</textarea>
+                </div>
             </fieldset>
 
             <fieldset>
@@ -235,11 +280,57 @@
     <script>
         (function ($) {
             var $form = $('#config-form');
+            var subsBlobUrl = null; // last object URL for the generated captions JSON
+            var playlistUrls = [];  // current playlist, one entry per video
+            var playlistIndex = 0;  // index of the playing video within the playlist
+
+            // Parse the playlist textarea into a list of URLs.
+            function getPlaylist() {
+                return $('#playlist-urls').val().split('\n')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.length > 0; });
+            }
+
+            // "12.5" or "00:01:02.5" -> seconds
+            function parseTime(s) {
+                s = String(s).trim();
+                if (s.indexOf(':') >= 0) {
+                    return s.split(':').reduce(function (acc, p) { return acc * 60 + parseFloat(p || 0); }, 0);
+                }
+                return parseFloat(s) || 0;
+            }
+
+            // seconds -> amalia timecode "HH:MM:SS.ffff"
+            function secToTc(t) {
+                function pad(n, l) { n = String(n); while (n.length < l) { n = '0' + n; } return n; }
+                var frac = Math.round((t - Math.floor(t)) * 10000);
+                return pad(Math.floor(t / 3600), 2) + ':' + pad(Math.floor(t % 3600 / 60), 2) +
+                    ':' + pad(Math.floor(t % 60), 2) + '.' + pad(frac, 4);
+            }
+
+            // Turn the "start - end  text" cue list into amalia caption metadata.
+            function parseSubtitles(text) {
+                var re = /^\s*([\d:.]+)\s*-\s*([\d:.]+)\s+(.+?)\s*$/;
+                var cues = [], maxOut = 0;
+                text.split('\n').forEach(function (line) {
+                    var m = line.match(re);
+                    if (!m) { return; }
+                    var tin = parseTime(m[1]), tout = parseTime(m[2]);
+                    maxOut = Math.max(maxOut, tout);
+                    cues.push({ data: { text: [m[3]] }, tcin: secToTc(tin), tcout: secToTc(tout), tclevel: 1 });
+                });
+                if (!cues.length) { return null; }
+                return {
+                    id: 'playground-subs',
+                    type: 'text',
+                    localisation: [{ sublocalisations: { localisation: cues }, tcin: secToTc(0), tcout: secToTc(maxOut), tclevel: 1 }]
+                };
+            }
 
             // Read every form control into an amalia.js-player settings object.
             function buildConfig() {
                 var durationVal = $('#duration').val();
-                return {
+                var config = {
                     src: $('#src').val().trim(),
                     poster: $('#poster').val().trim(),
                     title: $('#title').val().trim(),
@@ -255,10 +346,75 @@
                         autohide: $('#cb-autohide').is(':checked')
                     }
                 };
+
+                // Playlist -> first video is the source; prev/next + auto-advance
+                // are wired up after the player mounts (see bindPlaylist).
+                var addPlaylist = false;
+                if ($('#playlist-enabled').is(':checked')) {
+                    playlistUrls = getPlaylist();
+                    playlistIndex = 0;
+                    if (playlistUrls.length >= 1) { config.src = playlistUrls[0]; }
+                    addPlaylist = playlistUrls.length >= 2;
+                }
+
+                // Subtitles -> captions plugin fed from an in-memory JSON blob.
+                var hasCaptions = false;
+                if ($('#subs-enabled').is(':checked')) {
+                    var meta = parseSubtitles($('#subs-text').val());
+                    if (meta) {
+                        hasCaptions = true;
+                        subsBlobUrl = URL.createObjectURL(new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+                        config.plugins = {
+                            dataServices: [{ protocol: 'http', url: subsBlobUrl, format: 'json' }],
+                            list: [{
+                                className: 'fr.ina.amalia.player.plugins.CaptionsPlugin',
+                                parameters: { metadataId: 'playground-subs', level: 1 }
+                            }]
+                        };
+                    }
+                }
+
+                // Optional control-bar buttons. Setting controlBar.widgets replaces
+                // the defaults, so we always list the full set and add the extras.
+                var addCaptions = hasCaptions && $('#subs-button').is(':checked');
+                var addDownload = $('#download-button').is(':checked');
+                if (addCaptions || addDownload || addPlaylist) {
+                    var W = 'fr.ina.amalia.player.plugins.controlBar.widgets.';
+                    var mid = {};
+                    if (addPlaylist) { mid.prev = W + 'PlaylistButton'; }
+                    mid.playWidget = W + 'PlayButton';
+                    mid.pauseWidget = W + 'PauseButton';
+                    if (addPlaylist) {
+                        mid.next = W + 'PlaylistButton';
+                        mid.menu = W + 'PlaylistMenuButton';
+                    }
+                    var right = {};
+                    if (addDownload) { right.download = W + 'DownloadButton'; }
+                    right.volume = W + 'VolumeControlBar';
+                    if (addCaptions) { right.captions = W + 'CaptionsButton'; }
+                    right.full = W + 'FullscreenButton';
+                    var settings = {};
+                    if (addCaptions) { settings.captions = { defaultState: $('#subs-default-on').is(':checked'), title: 'Subtitles' }; }
+                    if (addPlaylist) {
+                        settings.prev = { direction: 'prev' };
+                        settings.next = { direction: 'next' };
+                        settings.menu = { title: 'Playlist', items: playlistUrls.map(function (u, i) {
+                            return (i + 1) + '. ' + decodeURIComponent((u.split('/').pop() || u).split('?')[0]);
+                        }) };
+                    }
+                    config.controlBar.widgets = {
+                        left: { timelabelWidget: W + 'TimeLabel' },
+                        mid: mid,
+                        right: right,
+                        settings: settings
+                    };
+                }
+                return config;
             }
 
             // Tear down the previous player instance, then mount a fresh one.
             function renderPlayer() {
+                if (subsBlobUrl) { URL.revokeObjectURL(subsBlobUrl); subsBlobUrl = null; }
                 var config = buildConfig();
 
                 if (!config.src) {
@@ -277,7 +433,45 @@
                 $('#player-host').empty().append($('<div id="player"></div>'));
                 $('#player').mediaPlayer(config);
 
+                if ($('#playlist-enabled').is(':checked') && playlistUrls.length >= 2) {
+                    bindPlaylist();
+                }
+
                 $('#config-output').text(stringify(config));
+            }
+
+            // Wire prev/next buttons and auto-advance to switch the source in place.
+            function bindPlaylist() {
+                var factory = $('#player').data('fr.ina.amalia.player');
+                var player = (factory && typeof factory.getPlayer === 'function') ? factory.getPlayer() : null;
+                if (!player || typeof player.getContainer !== 'function') { return; }
+                var container = player.getContainer();
+                container.on('ajs:playlist:next', function () { playlistGo(player, 1, false); });
+                container.on('ajs:playlist:prev', function () { playlistGo(player, -1, false); });
+                container.on('ajs:playlist:select', function (event, index) { goToIndex(player, index); });
+                // ENDED is triggered with this exact dotted string; reuse it verbatim.
+                container.on('fr.ina.amalia.player.PlayerEventType.ENDED', function () { playlistGo(player, 1, true); });
+            }
+
+            // Move within the playlist. Manual prev/next wrap around; auto-advance
+            // (on video end) stops at the last item.
+            function playlistGo(player, delta, isAuto) {
+                if (playlistUrls.length < 2) { return; }
+                var next = playlistIndex + delta;
+                if (isAuto) {
+                    if (next >= playlistUrls.length) { return; }
+                } else {
+                    next = (next % playlistUrls.length + playlistUrls.length) % playlistUrls.length;
+                }
+                goToIndex(player, next);
+            }
+
+            // Switch to a specific playlist index and tell the menu to re-highlight.
+            function goToIndex(player, index) {
+                if (index < 0 || index >= playlistUrls.length || index === playlistIndex) { return; }
+                playlistIndex = index;
+                player.setSrc(playlistUrls[playlistIndex], true);
+                player.getContainer().trigger('ajs:playlist:changed', [playlistIndex]);
             }
 
             // Pretty-print as a mediaPlayer() call, dropping empty optionals for clarity.
@@ -288,6 +482,13 @@
                     if (v === '' || v === null) return;
                     shown[k] = v;
                 });
+                // The blob URL is noise; show a readable placeholder instead.
+                if (shown.plugins && shown.plugins.dataServices) {
+                    shown = JSON.parse(JSON.stringify(shown));
+                    shown.plugins.dataServices = shown.plugins.dataServices.map(function (d) {
+                        return { protocol: d.protocol, url: 'blob:(generated from Subtitles field)', format: d.format };
+                    });
+                }
                 return '$("#player").mediaPlayer(' + JSON.stringify(shown, null, 2) + ');';
             }
 
@@ -301,7 +502,7 @@
             });
 
             // Text inputs apply on blur/change; checkboxes & selects apply immediately.
-            $form.on('change', 'input, select', maybeLive);
+            $form.on('change', 'input, select, textarea', maybeLive);
 
             $('#apply').on('click', renderPlayer);
 

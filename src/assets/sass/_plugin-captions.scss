@@ -46,3 +46,9 @@
     font-size: 1.4em;
   }
 }
+
+// Hidden by the control-bar captions toggle button. Uses `visibility` so the
+// captions plugin's own `display` show/hide on each time change can't override it.
+.ajs-captions-off .ajs-plugin.plugin-caption {
+  visibility: hidden;
+}
