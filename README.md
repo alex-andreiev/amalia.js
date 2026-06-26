@@ -63,7 +63,11 @@ Load the dependencies and the player, then attach it to a container element:
 
 ### Interactive playground
 
+**Live demo:** https://alex-andreiev.github.io/amalia.js/ (GitHub Pages, served from [`docs/`](./docs)).
+
 Open [`playground.html`](./playground.html) in a browser (after `npm run build`) for a live configurator: it embeds the player with a free public sample video and exposes the player parameters as form controls that apply changes in real time, with the generated `mediaPlayer()` config shown alongside. It also demonstrates the extra control-bar widgets this fork adds (below): editable subtitles, a download button, and a playlist with previous/next and a selectable menu.
+
+The hosted demo lives in [`docs/`](./docs) (page + a copy of the build). Regenerate it after changes with `npm run pages`.
 
 More complete, runnable examples (timeline, captions, overlay, text-sync, editor, watermark, webfont) are in the [`samples/`](./samples) directory.
 

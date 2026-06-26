@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>amalia.js-player — interactive playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Runtime dependencies (jQuery 3.7.x, jQuery UI 1.13.x, Raphaël 2.3.x) from CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+
+    <!-- amalia.js-player (built locally — run `npm run build` first) -->
+    <link rel="stylesheet" href="build/css/amalia.js-player.min.css">
+    <script src="build/js/amalia.js-player.min.js"></script>
+    <script src="build/js/amalia.js-player-plugin-captions.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #1b1b1f;
+            --panel: #26262c;
+            --border: #3a3a44;
+            --text: #e7e7ea;
+            --muted: #9a9aa6;
+            --accent: #0cf;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        header h1 { margin: 0; font-size: 20px; }
+        header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+        header code { color: var(--accent); }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            padding: 20px 24px;
+            align-items: start;
+        }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+        .player-stage {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        /* The player fills its host; the host needs an explicit height. */
+        #player-host { height: 420px; position: relative; }
+
+        .config-out {
+            margin-top: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .config-out summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
+        .config-out pre {
+            margin: 0;
+            padding: 0 14px 14px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #cfe9ff;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .panel h2 { margin: 0 0 4px; font-size: 14px; }
+        .panel .hint { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+
+        fieldset { border: none; border-top: 1px solid var(--border); margin: 0; padding: 14px 0 0; }
+        fieldset legend { padding: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+        .field { margin: 12px 0; }
+        .field label { display: block; font-size: 13px; margin-bottom: 5px; }
+        .field input[type="text"],
+        .field input[type="number"],
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 7px 9px;
+            background: #1b1b20;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            font-size: 13px;
+        }
+        .field textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; line-height: 1.5; }
+        .field label code { color: var(--accent); }
+        .field.check { display: flex; align-items: center; gap: 8px; }
+        .field.check label { margin: 0; }
+        .field.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        .actions { display: flex; gap: 8px; margin-top: 16px; }
+        button {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #303039;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        button.primary { background: var(--accent); color: #003; border-color: var(--accent); font-weight: 600; }
+        button:hover { filter: brightness(1.1); }
+
+        .live { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 12px; color: var(--muted); }
+        .live input { accent-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>amalia.js-player — interactive playground</h1>
+        <p>Set parameters on the right and they apply live to the player. Edit <code>$("#player").mediaPlayer(config)</code> visually. Video samples are public Blender open movies served from Google's sample bucket.</p>
+    </header>
+
+    <div class="layout">
+        <!-- ============ PLAYER ============ -->
+        <div>
+            <div class="player-stage">
+                <div id="player-host"></div>
+            </div>
+            <details class="config-out" open>
+                <summary>Generated config</summary>
+                <pre id="config-output"></pre>
+            </details>
+        </div>
+
+        <!-- ============ CONFIG FORM ============ -->
+        <form class="panel" id="config-form" autocomplete="off">
+            <h2>Player parameters</h2>
+            <p class="hint">Changes apply on edit when live mode is on, or click “Apply”.</p>
+
+            <fieldset>
+                <legend>Media</legend>
+                <div class="field">
+                    <label for="preset">Sample video</label>
+                    <select id="preset">
+                        <option value="https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4">Big Buck Bunny — 720p (~59 MB)</option>
+                        <option value="https://vjs.zencdn.net/v/oceans.mp4">Oceans — HD (~21 MB)</option>
+                        <option value="https://download.samplelib.com/mp4/sample-10s.mp4">Sample clip (~5 MB)</option>
+                        <option value="">— custom URL —</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="src">Source URL (src)</label>
+                    <input type="text" id="src" placeholder="https://…/video.mp4">
+                </div>
+                <div class="field">
+                    <label for="poster">Poster URL (poster)</label>
+                    <input type="text" id="poster" placeholder="optional image URL">
+                </div>
+                <div class="field">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" placeholder="optional">
+                </div>
+                <div class="field">
+                    <label for="preload">Preload</label>
+                    <select id="preload">
+                        <option value="auto" selected>auto</option>
+                        <option value="metadata">metadata</option>
+                        <option value="none">none</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Playlist</legend>
+                <div class="field check">
+                    <input type="checkbox" id="playlist-enabled">
+                    <label for="playlist-enabled">Enable playlist (prev/next buttons + auto-advance)</label>
+                </div>
+                <div class="field">
+                    <label for="playlist-urls">Video URLs — one per line (overrides the source above)</label>
+                    <textarea id="playlist-urls" rows="4">https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4
+https://vjs.zencdn.net/v/oceans.mp4
+https://download.samplelib.com/mp4/sample-10s.mp4</textarea>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Playback</legend>
+                <div class="field check">
+                    <input type="checkbox" id="autoplay">
+                    <label for="autoplay">autoplay</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="togglePlayPause">
+                    <label for="togglePlayPause">togglePlayPause (click video to play/pause)</label>
+                </div>
+                <div class="field">
+                    <label for="framerate">framerate (fps)</label>
+                    <input type="number" id="framerate" value="25" min="1" step="1">
+                </div>
+                <div class="field">
+                    <label for="tcOffset">tcOffset (timecode offset, frames)</label>
+                    <input type="number" id="tcOffset" value="0" step="1">
+                </div>
+                <div class="field">
+                    <label for="duration">duration override (seconds, blank = auto)</label>
+                    <input type="number" id="duration" placeholder="auto" min="0" step="1">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Control bar</legend>
+                <div class="field check">
+                    <input type="checkbox" id="cb-sticky">
+                    <label for="cb-sticky">sticky (always visible)</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="cb-autohide" checked>
+                    <label for="cb-autohide">autohide</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="download-button">
+                    <label for="download-button">Download button</label>
+                </div>
+                <p class="hint" style="margin:0">Download saves the file for same-origin / CORS-enabled sources; cross-origin videos without CORS open in a tab instead.</p>
+            </fieldset>
+
+            <fieldset>
+                <legend>Subtitles</legend>
+                <div class="field check">
+                    <input type="checkbox" id="subs-enabled" checked>
+                    <label for="subs-enabled">Show subtitles (captions plugin)</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="subs-button" checked>
+                    <label for="subs-button">Subtitles toggle button on control bar</label>
+                </div>
+                <div class="field check">
+                    <input type="checkbox" id="subs-default-on">
+                    <label for="subs-default-on">Subtitles visible by default</label>
+                </div>
+                <div class="field">
+                    <label for="subs-text">Cues — one per line: <code>start - end  text</code> (seconds or HH:MM:SS)</label>
+                    <textarea id="subs-text" rows="6">0 - 4   Welcome to the amalia.js-player playground
+4 - 8   These subtitles come from this field →
+8 - 12  Edit a line as:  start - end  text
+12 - 16 Untick the box above to turn them off</textarea>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Misc</legend>
+                <div class="field check">
+                    <input type="checkbox" id="debug">
+                    <label for="debug">debug (verbose console logging)</label>
+                </div>
+            </fieldset>
+
+            <div class="actions">
+                <button type="button" class="primary" id="apply">Apply</button>
+                <button type="button" id="reset">Reset</button>
+            </div>
+            <label class="live">
+                <input type="checkbox" id="live" checked>
+                Live mode — apply changes automatically
+            </label>
+        </form>
+    </div>
+
+    <script>
+        (function ($) {
+            var $form = $('#config-form');
+            var subsBlobUrl = null; // last object URL for the generated captions JSON
+            var playlistUrls = [];  // current playlist, one entry per video
+            var playlistIndex = 0;  // index of the playing video within the playlist
+
+            // Parse the playlist textarea into a list of URLs.
+            function getPlaylist() {
+                return $('#playlist-urls').val().split('\n')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s.length > 0; });
+            }
+
+            // "12.5" or "00:01:02.5" -> seconds
+            function parseTime(s) {
+                s = String(s).trim();
+                if (s.indexOf(':') >= 0) {
+                    return s.split(':').reduce(function (acc, p) { return acc * 60 + parseFloat(p || 0); }, 0);
+                }
+                return parseFloat(s) || 0;
+            }
+
+            // seconds -> amalia timecode "HH:MM:SS.ffff"
+            function secToTc(t) {
+                function pad(n, l) { n = String(n); while (n.length < l) { n = '0' + n; } return n; }
+                var frac = Math.round((t - Math.floor(t)) * 10000);
+                return pad(Math.floor(t / 3600), 2) + ':' + pad(Math.floor(t % 3600 / 60), 2) +
+                    ':' + pad(Math.floor(t % 60), 2) + '.' + pad(frac, 4);
+            }
+
+            // Turn the "start - end  text" cue list into amalia caption metadata.
+            function parseSubtitles(text) {
+                var re = /^\s*([\d:.]+)\s*-\s*([\d:.]+)\s+(.+?)\s*$/;
+                var cues = [], maxOut = 0;
+                text.split('\n').forEach(function (line) {
+                    var m = line.match(re);
+                    if (!m) { return; }
+                    var tin = parseTime(m[1]), tout = parseTime(m[2]);
+                    maxOut = Math.max(maxOut, tout);
+                    cues.push({ data: { text: [m[3]] }, tcin: secToTc(tin), tcout: secToTc(tout), tclevel: 1 });
+                });
+                if (!cues.length) { return null; }
+                return {
+                    id: 'playground-subs',
+                    type: 'text',
+                    localisation: [{ sublocalisations: { localisation: cues }, tcin: secToTc(0), tcout: secToTc(maxOut), tclevel: 1 }]
+                };
+            }
+
+            // Read every form control into an amalia.js-player settings object.
+            function buildConfig() {
+                var durationVal = $('#duration').val();
+                var config = {
+                    src: $('#src').val().trim(),
+                    poster: $('#poster').val().trim(),
+                    title: $('#title').val().trim(),
+                    preload: $('#preload').val(),
+                    autoplay: $('#autoplay').is(':checked'),
+                    togglePlayPause: $('#togglePlayPause').is(':checked'),
+                    framerate: parseInt($('#framerate').val(), 10) || 25,
+                    tcOffset: parseInt($('#tcOffset').val(), 10) || 0,
+                    duration: durationVal === '' ? null : parseFloat(durationVal),
+                    debug: $('#debug').is(':checked'),
+                    controlBar: {
+                        sticky: $('#cb-sticky').is(':checked'),
+                        autohide: $('#cb-autohide').is(':checked')
+                    }
+                };
+
+                // Playlist -> first video is the source; prev/next + auto-advance
+                // are wired up after the player mounts (see bindPlaylist).
+                var addPlaylist = false;
+                if ($('#playlist-enabled').is(':checked')) {
+                    playlistUrls = getPlaylist();
+                    playlistIndex = 0;
+                    if (playlistUrls.length >= 1) { config.src = playlistUrls[0]; }
+                    addPlaylist = playlistUrls.length >= 2;
+                }
+
+                // Subtitles -> captions plugin fed from an in-memory JSON blob.
+                var hasCaptions = false;
+                if ($('#subs-enabled').is(':checked')) {
+                    var meta = parseSubtitles($('#subs-text').val());
+                    if (meta) {
+                        hasCaptions = true;
+                        subsBlobUrl = URL.createObjectURL(new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+                        config.plugins = {
+                            dataServices: [{ protocol: 'http', url: subsBlobUrl, format: 'json' }],
+                            list: [{
+                                className: 'fr.ina.amalia.player.plugins.CaptionsPlugin',
+                                parameters: { metadataId: 'playground-subs', level: 1 }
+                            }]
+                        };
+                    }
+                }
+
+                // Optional control-bar buttons. Setting controlBar.widgets replaces
+                // the defaults, so we always list the full set and add the extras.
+                var addCaptions = hasCaptions && $('#subs-button').is(':checked');
+                var addDownload = $('#download-button').is(':checked');
+                if (addCaptions || addDownload || addPlaylist) {
+                    var W = 'fr.ina.amalia.player.plugins.controlBar.widgets.';
+                    var mid = {};
+                    if (addPlaylist) { mid.prev = W + 'PlaylistButton'; }
+                    mid.playWidget = W + 'PlayButton';
+                    mid.pauseWidget = W + 'PauseButton';
+                    if (addPlaylist) {
+                        mid.next = W + 'PlaylistButton';
+                        mid.menu = W + 'PlaylistMenuButton';
+                    }
+                    var right = {};
+                    if (addDownload) { right.download = W + 'DownloadButton'; }
+                    right.volume = W + 'VolumeControlBar';
+                    if (addCaptions) { right.captions = W + 'CaptionsButton'; }
+                    right.full = W + 'FullscreenButton';
+                    var settings = {};
+                    if (addCaptions) { settings.captions = { defaultState: $('#subs-default-on').is(':checked'), title: 'Subtitles' }; }
+                    if (addPlaylist) {
+                        settings.prev = { direction: 'prev' };
+                        settings.next = { direction: 'next' };
+                        settings.menu = { title: 'Playlist', items: playlistUrls.map(function (u, i) {
+                            return (i + 1) + '. ' + decodeURIComponent((u.split('/').pop() || u).split('?')[0]);
+                        }) };
+                    }
+                    config.controlBar.widgets = {
+                        left: { timelabelWidget: W + 'TimeLabel' },
+                        mid: mid,
+                        right: right,
+                        settings: settings
+                    };
+                }
+                return config;
+            }
+
+            // Tear down the previous player instance, then mount a fresh one.
+            function renderPlayer() {
+                if (subsBlobUrl) { URL.revokeObjectURL(subsBlobUrl); subsBlobUrl = null; }
+                var config = buildConfig();
+
+                if (!config.src) {
+                    $('#player-host').html('<div style="color:#9a9aa6;padding:20px;font-size:13px">' +
+                        'Provide a source URL (or pick a sample) to load the player.</div>');
+                    $('#config-output').text(stringify(config));
+                    return;
+                }
+
+                var $old = $('#player');
+                if ($old.length) {
+                    var factory = $old.data('fr.ina.amalia.player');
+                    try { if (factory && factory.getPlayer()) { factory.getPlayer().destroy(); } } catch (e) { /* ignore */ }
+                }
+                // A brand-new element avoids the plugin's "already initialised" guard.
+                $('#player-host').empty().append($('<div id="player"></div>'));
+                $('#player').mediaPlayer(config);
+
+                if ($('#playlist-enabled').is(':checked') && playlistUrls.length >= 2) {
+                    bindPlaylist();
+                }
+
+                $('#config-output').text(stringify(config));
+            }
+
+            // Wire prev/next buttons and auto-advance to switch the source in place.
+            function bindPlaylist() {
+                var factory = $('#player').data('fr.ina.amalia.player');
+                var player = (factory && typeof factory.getPlayer === 'function') ? factory.getPlayer() : null;
+                if (!player || typeof player.getContainer !== 'function') { return; }
+                var container = player.getContainer();
+                container.on('ajs:playlist:next', function () { playlistGo(player, 1, false); });
+                container.on('ajs:playlist:prev', function () { playlistGo(player, -1, false); });
+                container.on('ajs:playlist:select', function (event, index) { goToIndex(player, index); });
+                // ENDED is triggered with this exact dotted string; reuse it verbatim.
+                container.on('fr.ina.amalia.player.PlayerEventType.ENDED', function () { playlistGo(player, 1, true); });
+            }
+
+            // Move within the playlist. Manual prev/next wrap around; auto-advance
+            // (on video end) stops at the last item.
+            function playlistGo(player, delta, isAuto) {
+                if (playlistUrls.length < 2) { return; }
+                var next = playlistIndex + delta;
+                if (isAuto) {
+                    if (next >= playlistUrls.length) { return; }
+                } else {
+                    next = (next % playlistUrls.length + playlistUrls.length) % playlistUrls.length;
+                }
+                goToIndex(player, next);
+            }
+
+            // Switch to a specific playlist index and tell the menu to re-highlight.
+            function goToIndex(player, index) {
+                if (index < 0 || index >= playlistUrls.length || index === playlistIndex) { return; }
+                playlistIndex = index;
+                player.setSrc(playlistUrls[playlistIndex], true);
+                player.getContainer().trigger('ajs:playlist:changed', [playlistIndex]);
+            }
+
+            // Pretty-print as a mediaPlayer() call, dropping empty optionals for clarity.
+            function stringify(config) {
+                var shown = {};
+                Object.keys(config).forEach(function (k) {
+                    var v = config[k];
+                    if (v === '' || v === null) return;
+                    shown[k] = v;
+                });
+                // The blob URL is noise; show a readable placeholder instead.
+                if (shown.plugins && shown.plugins.dataServices) {
+                    shown = JSON.parse(JSON.stringify(shown));
+                    shown.plugins.dataServices = shown.plugins.dataServices.map(function (d) {
+                        return { protocol: d.protocol, url: 'blob:(generated from Subtitles field)', format: d.format };
+                    });
+                }
+                return '$("#player").mediaPlayer(' + JSON.stringify(shown, null, 2) + ');';
+            }
+
+            function maybeLive() { if ($('#live').is(':checked')) { renderPlayer(); } }
+
+            // Keep the custom URL field in sync with the preset selector.
+            $('#preset').on('change', function () {
+                var val = $(this).val();
+                if (val !== '') { $('#src').val(val); }
+                maybeLive();
+            });
+
+            // Text inputs apply on blur/change; checkboxes & selects apply immediately.
+            $form.on('change', 'input, select, textarea', maybeLive);
+
+            $('#apply').on('click', renderPlayer);
+
+            $('#reset').on('click', function () {
+                $form[0].reset();
+                // .reset() restores HTML defaults; sync src from the default preset.
+                $('#src').val($('#preset').val());
+                renderPlayer();
+            });
+
+            // Initial mount.
+            $(function () {
+                $('#src').val($('#preset').val());
+                renderPlayer();
+            });
+        })(jQuery);
+    </script>
+</body>
+</html>

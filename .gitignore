@@ -1,7 +1,7 @@
 .svn
 .bowerrc
-build
-build-doc
+/build
+/build-doc
 .idea
 bower_components
 node_modules
