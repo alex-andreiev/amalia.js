@@ -21,8 +21,15 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm publish --access public
+      - run: npm install --no-audit --no-fund
+      - name: Publish to npm (skip if version already exists)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "amalia.js-player@$VERSION" version >/dev/null 2>&1; then
+            echo "amalia.js-player@$VERSION is already on npm — skipping."
+          else
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -43,9 +50,15 @@ jobs:
           node-version: 20
           registry-url: https://npm.pkg.github.com
           scope: '@alex-andreiev'
-      - run: npm ci
-      - name: Scope package name for GitHub Packages
-        run: npm pkg set name=@alex-andreiev/amalia.js-player
-      - run: npm publish --access public
+      - run: npm install --no-audit --no-fund
+      - name: Scope name & publish to GitHub Packages (skip if version already exists)
+        run: |
+          npm pkg set name=@alex-andreiev/amalia.js-player
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@alex-andreiev/amalia.js-player@$VERSION" version >/dev/null 2>&1; then
+            echo "@alex-andreiev/amalia.js-player@$VERSION is already on GitHub Packages — skipping."
+          else
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
