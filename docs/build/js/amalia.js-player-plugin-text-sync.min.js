@@ -1,4 +1,4 @@
-/*!Metadata-enriched HTML5 video player (maintained fork of INA's amalia.js) V1.3.3, © INA 2026 */
+/*!Metadata-enriched HTML5 video player (maintained fork of INA's amalia.js) V1.3.4, © INA 2026 */
 /**
  * Copyright (c) 2015-2023 Institut National de l'Audiovisuel, INA
  *

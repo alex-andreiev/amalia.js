@@ -212,7 +212,6 @@ module.exports = function (grunt) {
         clean: {
             build: [
                 'build',
-                'docs',
                 'tmp'
             ]
         },
